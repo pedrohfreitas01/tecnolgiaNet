@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portal Acadêmico | PET Project</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="container header-content">
+      <div class="logo">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 3L1 9L12 15L21 10.09V17H23V9M5 13.18V17.18L12 21L19 17.18V13.18L12 17L5 13.18Z"/>
+        </svg>
+        <span>Portal Acadêmico</span>
+      </div>
+      <div class="header-actions">
+        <button id="theme-toggle" class="btn-theme" type="button" title="Ativar tema escuro" aria-label="Ativar tema escuro" aria-pressed="false">🌙</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container main-content">
+    <!-- Card do Perfil Selecionado -->
+    <section class="card profile-card" id="profile-container">
+      <div class="profile-avatar-wrapper">
+        <img id="perfil-foto" src="/assets/20260918_221622.jpg" alt="Foto do Aluno" class="profile-avatar">
+      </div>
+      <div class="profile-info">
+        <h1 id="perfil-nome">Carregando...</h1>
+        <p class="profile-meta">
+          <span id="perfil-curso">-</span> • <span id="perfil-semestre">-</span>º Semestre
+        </p>
+        <p id="perfil-descricao" class="profile-desc"></p>
+      </div>
+    </section>
+
+    <!-- Grid: Disciplinas e Cadastro -->
+    <div class="grid-two-columns">
+      <!-- Lista de Disciplinas (Passo 7 do PDF) -->
+      <section class="card">
+        <div class="card-header">
+          <h2>Disciplinas Cadastradas</h2>
+          <span class="badge" id="disciplinas-count">0</span>
+        </div>
+        <ul id="lista-disciplinas" class="disciplinas-list"></ul>
+      </section>
+
+      <!-- Formulário de Cadastro POST (Passo 5 do PDF) -->
+      <section class="card">
+        <div class="card-header">
+          <h2>Nova Disciplina</h2>
+        </div>
+        <form id="form-disciplina" class="form-disciplina">
+          <div class="form-group">
+            <label for="disc-nome">Nome da Disciplina</label>
+            <input type="text" id="disc-nome" placeholder="Ex: Redes de Computadores" required>
+          </div>
+          <div class="form-group">
+            <label for="disc-semestre">Semestre</label>
+            <input type="number" id="disc-semestre" min="1" max="10" placeholder="Ex: 5" required>
+          </div>
+          <button type="submit" class="btn-primary">Adicionar Disciplina</button>
+          <p id="form-feedback" class="feedback-msg"></p>
+        </form>
+      </section>
+    </div>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>

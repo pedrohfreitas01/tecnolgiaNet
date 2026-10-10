@@ -1,57 +1,20 @@
 const express = require("express");
+const path = require("path");
+
 const app = express();
-app.use(express.json());
 const PORTA = 3000;
 
-let disciplinas = [
-  { id: 1, nome: "Tecnologias de Internet", semestre: 4 },
-  { id: 2, nome: "Banco de Dados", semestre: 3 }
-];
-let proximoId = 3;
+app.use(express.json());
+app.use(express.static(path.join(__dirname, "frontend")));
+app.use("/assets", express.static(path.join(__dirname, "public/assets")));
 
-app.get("/api/disciplinas", (req, res) => {
-  res.json(disciplinas);
-});
+const disciplinasRouter = require("./backend/routes/disciplinas.routes.js");
+const perfilRouter = require("./backend/routes/alunos.routes.js");
 
-app.post("/api/disciplinas", (req, res) => {
-  const { nome, semestre } = req.body || {};
-  if (!nome) {
-    return res.status(400).json({ erro: "O campo nome é obrigatório" });
-  }
-  const nova = { id: proximoId++, nome, semestre };
-  disciplinas.push(nova);
-  res.status(201).json(nova);
-});
-
-const perfil = { nome: "Pedro", curso: "Ciência da Computação", semestre: 7 };
-
-app.get("/api/perfil", (req, res) => {
-  res.json(perfil);
-});
-
-app.get("/api/disciplinas/:id", (req, res) => {
-  const id = Number(req.params.id);
-  const disciplina = disciplinas.find((d) => d.id === id);
-  if (!disciplina) {
-    return res.status(404).json({ erro: "Disciplina não encontrada" });
-  }
-  res.json(disciplina);
-});
-
-app.get("/", (req, res) => {
-  res.send("Minha API está no ar!");
-});
-
-app.post("/api/disciplinas", (req, res) => {
-  const { nome, semestre } = req.body || {};
-  if (!nome) {
-    return res.status(400).json({ erro: "O campo nome é obrigatório" });
-  }
-  const nova = { id: proximoId++, nome, semestre };
-  disciplinas.push(nova);
-  res.status(201).json(nova);
-});
+// rotas 
+app.use("/api/disciplinas", disciplinasRouter);
+app.use("/api/perfil", perfilRouter);
 
 app.listen(PORTA, () => {
   console.log(`Servidor rodando em http://localhost:${PORTA}`);
-})
+});
