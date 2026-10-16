@@ -16,17 +16,196 @@ async function carregarPerfil() {
   }
 }
 
+function definirFeedbackDisciplinas(mensagem, tipo = "") {
+  const feedback = document.getElementById("disciplinas-feedback");
+  feedback.textContent = mensagem;
+  feedback.className = `feedback-msg ${tipo}`.trim();
+}
+
+function criarElemento(tag, classe = "", texto) {
+  const elemento = document.createElement(tag);
+  if (classe) elemento.className = classe;
+  if (texto !== undefined) elemento.textContent = texto;
+  return elemento;
+}
+
+function criarBotao(texto, classe, tipo = "button") {
+  const botao = criarElemento("button", classe, texto);
+  botao.type = tipo;
+  return botao;
+}
+
+function criarCampoDisciplina(id, rotulo, tipo, valor) {
+  const grupo = criarElemento("div", "form-group");
+  const label = criarElemento("label", "", rotulo);
+  const input = document.createElement("input");
+
+  label.htmlFor = id;
+  input.id = id;
+  input.type = tipo;
+  input.value = valor || "";
+  if (tipo === "text") input.required = true;
+  if (tipo === "number") {
+    input.min = "1";
+    input.max = "10";
+  }
+
+  grupo.append(label, input);
+  return { grupo, input };
+}
+
+async function mensagemErro(res, mensagemPadrao) {
+  try {
+    const resultado = await res.json();
+    return resultado.erro || mensagemPadrao;
+  } catch {
+    return mensagemPadrao;
+  }
+}
+
+async function requisicaoApi(url, opcoes = {}, mensagemPadrao) {
+  const res = await fetch(url, opcoes);
+  if (!res.ok) {
+    throw new Error(await mensagemErro(res, `${mensagemPadrao} (HTTP ${res.status})`));
+  }
+  return res.status === 204 ? null : res.json();
+}
+
+async function carregarDetalhesDisciplina(id, detalhes, botao) {
+  try {
+    const disciplina = await requisicaoApi(
+      `/api/disciplinas/${id}`,
+      {},
+      "Falha ao carregar disciplina"
+    );
+    const semestre = disciplina.semestre
+      ? `${disciplina.semestre}º semestre`
+      : "Sem semestre";
+    detalhes.replaceChildren();
+
+    [["ID", disciplina.id], ["Semestre", semestre]].forEach(([rotulo, valor]) => {
+      const linha = criarElemento("p");
+      const nomeCampo = criarElemento("strong", "", `${rotulo}: `);
+      linha.append(nomeCampo, document.createTextNode(valor));
+      detalhes.appendChild(linha);
+    });
+
+    detalhes.hidden = false;
+    botao.setAttribute("aria-expanded", "true");
+  } catch (err) {
+    detalhes.textContent = err.message || "Não foi possível carregar a disciplina.";
+    detalhes.hidden = false;
+    botao.setAttribute("aria-expanded", "false");
+  }
+}
+
+async function salvarDisciplina(event, disciplina, formulario, inputNome, inputSemestre) {
+  event.preventDefault();
+  const nome = inputNome.value.trim();
+  inputNome.setCustomValidity(nome ? "" : "Informe o nome da disciplina.");
+  if (!formulario.reportValidity()) return;
+
+  const dados = { nome };
+  if (inputSemestre.value !== "") {
+    dados.semestre = Number(inputSemestre.value);
+  }
+
+  try {
+    await requisicaoApi(`/api/disciplinas/${disciplina.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(dados),
+    }, "Falha ao atualizar disciplina");
+
+    await carregarDisciplinas();
+    definirFeedbackDisciplinas("Disciplina atualizada com sucesso.", "feedback-success");
+  } catch (err) {
+    definirFeedbackDisciplinas(err.message || "Não foi possível atualizar a disciplina.", "feedback-error");
+  }
+}
+
+async function excluirDisciplina(disciplina) {
+  if (!window.confirm(`Excluir a disciplina "${disciplina.nome}"?`)) return;
+
+  try {
+    await requisicaoApi(`/api/disciplinas/${disciplina.id}`, { method: "DELETE" }, "Falha ao excluir disciplina");
+    await carregarDisciplinas();
+    definirFeedbackDisciplinas("Disciplina excluída com sucesso.", "feedback-success");
+  } catch (err) {
+    definirFeedbackDisciplinas(err.message || "Não foi possível excluir a disciplina.", "feedback-error");
+  }
+}
+
+function criarItemDisciplina(disciplina) {
+  const item = criarElemento("li", "disciplina-item");
+  const linha = criarElemento("div", "disciplina-row");
+  const info = criarElemento("div", "disciplina-info");
+  const icon = criarElemento("span", "disciplina-icon", "📘");
+  const nome = criarBotao(disciplina.nome, "disciplina-title");
+  const acoes = criarElemento("div", "disciplina-actions");
+  const editar = criarBotao("Editar", "btn-secondary btn-small");
+  const excluir = criarBotao("Delete", "btn-danger btn-small");
+  const detalhes = criarElemento("div", "disciplina-details");
+  const formulario = criarElemento("form", "disciplina-edit-form");
+  const campoNome = criarCampoDisciplina(
+    `disciplina-nome-${disciplina.id}`,
+    "Nome",
+    "text",
+    disciplina.nome
+  );
+  const campoSemestre = criarCampoDisciplina(
+    `disciplina-semestre-${disciplina.id}`,
+    "Semestre",
+    "number",
+    disciplina.semestre
+  );
+  const salvar = criarBotao("Salvar", "btn-primary btn-small", "submit");
+  const cancelar = criarBotao("Cancelar", "btn-secondary btn-small");
+
+  nome.setAttribute("aria-expanded", "false");
+  nome.setAttribute("aria-controls", `disciplina-detalhes-${disciplina.id}`);
+  detalhes.id = `disciplina-detalhes-${disciplina.id}`;
+  detalhes.hidden = true;
+  formulario.hidden = true;
+  formulario.append(campoNome.grupo, campoSemestre.grupo, salvar, cancelar);
+  info.append(icon, nome);
+  acoes.append(editar, excluir);
+  linha.append(info, acoes);
+  item.append(linha, detalhes, formulario);
+
+  nome.addEventListener("click", () => {
+    if (!detalhes.hidden) {
+      detalhes.hidden = true;
+      nome.setAttribute("aria-expanded", "false");
+      return;
+    }
+    carregarDetalhesDisciplina(disciplina.id, detalhes, nome);
+  });
+
+  editar.addEventListener("click", () => {
+    formulario.hidden = !formulario.hidden;
+    detalhes.hidden = true;
+    nome.setAttribute("aria-expanded", "false");
+    if (!formulario.hidden) campoNome.input.focus();
+  });
+  cancelar.addEventListener("click", () => {
+    formulario.hidden = true;
+  });
+  formulario.addEventListener("submit", (event) => {
+    salvarDisciplina(event, disciplina, formulario, campoNome.input, campoSemestre.input);
+  });
+  excluir.addEventListener("click", () => excluirDisciplina(disciplina));
+
+  return item;
+}
+
+//  GET carregar a lista do Backend e mostrar todas elas no front 
 async function carregarDisciplinas() {
   const lista = document.getElementById("lista-disciplinas");
   const contador = document.getElementById("disciplinas-count");
 
   try {
-    const res = await fetch("/api/disciplinas");
-    if (!res.ok) {
-      throw new Error(`Falha ao carregar disciplinas (HTTP ${res.status})`);
-    }
-
-    const disciplinas = await res.json();
+    const disciplinas = await requisicaoApi("/api/disciplinas", {}, "Falha ao carregar disciplinas");
     if (!Array.isArray(disciplinas)) {
       throw new Error("A resposta da API de disciplinas não é uma lista");
     }
@@ -35,42 +214,21 @@ async function carregarDisciplinas() {
     contador.textContent = disciplinas.length;
 
     if (disciplinas.length === 0) {
-      const item = document.createElement("li");
-      item.textContent = "Nenhuma disciplina cadastrada.";
-      lista.appendChild(item);
+      lista.appendChild(criarElemento("li", "", "Nenhuma disciplina cadastrada."));
       return;
     }
 
-    disciplinas.forEach((disciplina) => {
-      const item = document.createElement("li");
-      const info = document.createElement("div");
-      const icon = document.createElement("span");
-      const nome = document.createElement("span");
-      const semestre = document.createElement("span");
-
-      info.className = "disciplina-info";
-      icon.className = "disciplina-icon";
-      icon.textContent = "📘";
-      nome.textContent = disciplina.nome;
-      semestre.className = "disciplina-semestre";
-      semestre.textContent = disciplina.semestre
-        ? `${disciplina.semestre}º semestre`
-        : "Sem semestre";
-
-      info.append(icon, nome);
-      item.append(info, semestre);
-      lista.appendChild(item);
-    });
+    lista.append(...disciplinas.map(criarItemDisciplina));
   } catch (err) {
     console.error("Erro ao carregar disciplinas:", err);
     contador.textContent = "0";
     lista.replaceChildren();
-    const item = document.createElement("li");
-    item.textContent = "Não foi possível carregar as disciplinas.";
-    lista.appendChild(item);
+    definirFeedbackDisciplinas("Não foi possível carregar as disciplinas.", "feedback-error");
+    lista.appendChild(criarElemento("li", "", "Nenhuma disciplina disponível."));
   }
 }
 
+// deixar o site no Darkmode ou lightmode 
 function configurarTema() {
   const botao = document.getElementById("theme-toggle");
 
@@ -104,16 +262,11 @@ function configurarFormularioDisciplina() {
     const semestre = Number(document.getElementById("disc-semestre").value);
 
     try {
-      const res = await fetch("/api/disciplinas", {
+      await requisicaoApi("/api/disciplinas", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ nome, semestre }),
-      });
-      const resultado = await res.json();
-
-      if (!res.ok) {
-        throw new Error(resultado.erro || `Falha ao cadastrar (HTTP ${res.status})`);
-      }
+      }, "Falha ao cadastrar disciplina");
 
       formulario.reset();
       feedback.textContent = "Disciplina cadastrada com sucesso.";

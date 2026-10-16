@@ -201,24 +201,142 @@ body {
 }
 
 .disciplinas-list li {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  display: block;
   padding: 10px 12px;
   border-radius: 8px;
   background-color: var(--bg-main);
   border: 1px solid var(--border);
 }
 
+.disciplina-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
 .disciplina-info {
   display: flex;
   align-items: center;
   gap: 10px;
+  min-width: 0;
 }
 
 .disciplina-icon {
   color: var(--primary);
   display: flex;
+}
+
+.disciplina-title {
+  border: 0;
+  padding: 2px 0;
+  background: transparent;
+  color: var(--text-main);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.disciplina-title:hover {
+  color: var(--primary);
+}
+
+.disciplina-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.disciplina-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin: 10px 0 0 28px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.disciplina-details strong {
+  color: var(--text-main);
+}
+
+.disciplina-edit-form {
+  display: grid;
+  grid-template-columns: minmax(120px, 1fr) minmax(90px, 140px) auto auto;
+  align-items: end;
+  gap: 10px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.btn-small {
+  min-height: 36px;
+  padding: 7px 10px;
+  margin: 0;
+  white-space: nowrap;
+}
+
+.btn-secondary,
+.btn-danger {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 7px 10px;
+  background: var(--bg-card);
+  color: var(--text-main);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.btn-secondary:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.btn-danger {
+  color: var(--contrast);
+}
+
+.btn-danger:hover {
+  border-color: var(--contrast);
+  background: var(--contrast);
+  color: #FFFFFF;
+}
+
+.disciplina-edit-form .form-group input {
+  min-width: 0;
+  width: 100%;
+}
+
+.disciplina-edit-form .btn-primary {
+  min-height: 36px;
+}
+
+.disciplina-edit-form[hidden],
+.disciplina-details[hidden] {
+  display: none;
+}
+
+.feedback-msg:empty {
+  display: none;
+}
+
+@media (max-width: 520px) {
+  .disciplina-row {
+    align-items: flex-start;
+  }
+
+  .disciplina-actions {
+    gap: 5px;
+  }
+
+  .disciplina-edit-form {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 
 .disciplina-semestre {

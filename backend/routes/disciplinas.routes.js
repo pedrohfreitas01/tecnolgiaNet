@@ -37,4 +37,35 @@ router.post("/", (req, res) => {
   res.status(201).json(nova);
 });
 
+router.put("/:id", (req, res) => {
+  const id = Number(req.params.id);
+  const indice = disciplinas.findIndex((d) => d.id === id);
+
+  if (indice === -1) {
+    return res.status(404).json({ erro: "Disciplina não encontrada" });
+  }
+
+  const dados = req.body || {};
+
+  if (!dados.nome) {
+    return res.status(400).json({ erro: "O campo nome é obrigatório" });
+  }
+
+  const atualizada = { ...dados, id };
+  disciplinas[indice] = atualizada;
+  res.json(atualizada);
+});
+
+router.delete("/:id", (req, res) => {
+  const id = Number(req.params.id);
+  const indice = disciplinas.findIndex((d) => d.id === id);
+
+  if (indice === -1) {
+    return res.status(404).json({ erro: "Disciplina não encontrada" });
+  }
+
+  disciplinas.splice(indice, 1);
+  res.status(204).end();
+});
+
 module.exports = router;
